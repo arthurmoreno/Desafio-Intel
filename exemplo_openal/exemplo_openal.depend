@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1439842521 source:c:\users\jatoba\desktop\projectoopencv\exemplo_openal\main.cpp
+	<cstdio>
+	<cstdlib>
+	<cmath>
+	<iostream>
+	<al.h>
+	<alc.h>
+	<time.h>
+
