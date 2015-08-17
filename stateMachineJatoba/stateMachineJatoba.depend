@@ -1,0 +1,37 @@
+# depslib dependency file v1.0
+1439706765 source:/home/heitor/Documentos/testesOpenCV/stateMachineJatoba/main.cpp
+	<cstdlib>
+	<iostream>
+	<signal.h>
+	<sstream>
+	"opencv/highgui.h"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+
+1439755179 source:/home/heitor/Documentos/Intel/stateMachineJatoba/main.cpp
+	<cstdlib>
+	<iostream>
+	<signal.h>
+	<sstream>
+	"opencv/highgui.h"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+
+1439788791 source:/home/heitor/Documentos/desafio intel/stateMachineJatoba/main.cpp
+	<cstdlib>
+	<iostream>
+	<signal.h>
+	<sstream>
+	"opencv/highgui.h"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+	"stereoFunction.hpp"
+
+1439788837 /home/heitor/Documentos/desafio intel/stateMachineJatoba/stereoFunction.hpp
+	"opencv2/calib3d/calib3d.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+	"opencv2/imgcodecs.hpp"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/core/utility.hpp"
+	<stdio.h>
+
