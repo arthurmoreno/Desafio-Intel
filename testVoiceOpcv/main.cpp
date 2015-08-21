@@ -12,15 +12,23 @@
 #include "opencv/highgui.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include <windows.h>
+#include <mmsystem.h>
+#include <time.h>
+#include <fstream>
+#include <iostream>
+
 
 using namespace cv;
+using namespace std;
 
 #define FNAME "hificode.wav"    /* User-defined parameters   */
 
+#define BUF_SIZE 1
 #define FL   500   /* Lowest  frequency (Hz) in soundscape   */
 #define FH  5000   /* Highest frequency (Hz)                 */
 #define FS 44100   /* Sample  frequency (Hz)                 */
-#define T   0.95   /* Image to sound conversion time (s)     */
+#define T   0.90   /* Image to sound conversion time (s)     */
 #define D      1   /* Linear|Exponential=0|1 distribution    */
 #define HIFI   1   /* 8-bit|16-bit=0|1 sound quality         */
 #define STEREO 0   /* Mono|Stereo=0|1 sound selection        */
@@ -38,176 +46,36 @@ using namespace cv;
 #define WHITE 1.00
 #define BLACK 0.00
 
-sem_t pos_vazia;
+
 
 /* Soundscape resolution M rows x N columns */
 #if CAM
 /* 176 x 64 for live camera view */
 #define M     64
-#define N    176
+#define N    136
 #else
 /* 64 x 64 for hard-coded image */
 #define M     64
 #define N     64
 #endif
 
-#if BW
-static char *P[] =    /* 64 x 64 pixels, black and white '#',' ' */
-{
-    "########################### # ###### ### ## ####################",
-    "############################ ###################################",
-    "########################## #### #  #############################",
-    "########################## #  #  ##### ####### #################",
-    "############################## ######### #######################",
-    "############################# ############    ##################",
-    "###########################  #### ###  #### ### ### ############",
-    "########################## ## ### ## ## ##### ##################",
-    "######################### ##  ### #  #### ###### ###############",
-    "##########################   ### ############ ##  ##  ##########",
-    "######################### #  #  ### # ##### ### ################",
-    "############################# #  ### # #######  #  #############",
-    "#################### ###### ################# ##### ############",
-    "###################   ########### #############  # #############",
-    "##################  #  ####   # ####### ## ######### ###########",
-    "#################  ###  ###   #### # ###########################",
-    "################  #####  ##   ##################################",
-    "###############  #######  #   ##################################",
-    "##############  #########     ##################################",
-    "#############  ###########    ##################################",
-    "############  #############   ##################################",
-    "###########  ###############  ##################################",
-    "##########  #################  #################################",
-    "#########  ###################  #################   ##   ##   ##",
-    "########  #####################  ################   ##   ##   ##",
-    "#######  #######################  ###############   ##   ##   ##",
-    "######  #########################  ##############   ##   ##   ##",
-    "#####  ###########################  #############   ##   ##   ##",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####     #######      #######      ############################",
-    "#####     #######      #######      ############################",
-    "#####     #######      #######      ############################",
-    "#####     #######      #######      ############################",
-    "#####     #######      #######      ############################",
-    "#####     #######      #######      ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####                               ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######      ########      ############################",
-    "#####     ######                    ############################",
-    "#####     ######                    ##########       ###########",
-    "#####     ######                    ######### ## #### ##########",
-    "#####     ######                    ######## ### #### ##########",
-    "#####                               #####   #### #####     #####",
-    "########################################                    ####",
-    "########################################                    ####",
-    "########################################  #  #       #  #   ####",
-    "################################## #######    #######    #######",
-    "################################  ########    #######    #######",
-    "#############################   ###########  #########  ########",
-    "########################     ###################################",
-    "################        ########################################",
-    "##              ################################################"
-};
-#else
-static char *P[] =    /* 64 x 64 pixels, 16 gray levels a,...,p */
-{
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaapapaaaaaapaaapaapaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaapaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaapaaaapappaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaapappappaaaaapaaaaaaapaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaapaaaaaaaaapaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaapaaaaaaaaaaaappppaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaappaaaapaaappaaaapaaapaaapaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaapaapaaapaapaapaaaaapaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaapaappaaapappaaaapaaaaaapaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaapppaaapaaaaaaaaaaaapaappaappaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaapappappaaapapaaaaapaaapaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaapappaaapapaaaaaaappappaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaapaaaaaapaaaaaaaaaaaaaaaaapaaaaapaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaapppaaaaaaaaaaapaaaaaaaaaaaaappapaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaappappaaaapppapaaaaaaapaapaaaaaaaaapaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaaappaaappaaapppaaaapapaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaappaaaaappaapppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaappaaaaaaappapppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaappaaaaaaaaapppppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaappaaaaaaaaaaappppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaappaaaaaaaaaaaaapppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaappaaaaaaaaaaaaaaappaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaappaaaaaaaaaaaaaaaaappaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaappaaaaaaaaaaaaaaaaaaappaaaaaaaaaaaaaaaaapppaapppaapppaa",
-    "aaaaaaaappaaaaaaaaaaaaaaaaaaaaappaaaaaaaaaaaaaaaapppaapppaapppaa",
-    "aaaaaaappaaaaaaaaaaaaaaaaaaaaaaappaaaaaaaaaaaaaaapppaapppaapppaa",
-    "aaaaaappaaaaaaaaaaaaaaaaaaaaaaaaappaaaaaaaaaaaaaapppaapppaapppaa",
-    "aaaaappaaaaaaaaaaaaaaaaaaaaaaaaaaappaaaaaaaaaaaaapppaapppaapppaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaaappppppaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppaaaaaaaappppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppppppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppppppppppppppppaaaaaaaaaapppppppaaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppppppppppppppppaaaaaaaaapaapaaaapaaaaaaaaaa",
-    "aaaaapppppaaaaaappppppppppppppppppppaaaaaaaapaaapaaaapaaaaaaaaaa",
-    "aaaaapppppppppppppppppppppppppppppppaaaaapppaaaapaaaaapppppaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaappppppppppppppppppppaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaappppppppppppppppppppaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaappappapppppppappapppaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaapaaaaaaappppaaaaaaappppaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaappaaaaaaaappppaaaaaaappppaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaapppaaaaaaaaaaappaaaaaaaaappaaaaaaaa",
-    "aaaaaaaaaaaaaaaaaaaaaaaapppppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aaaaaaaaaaaaaaaappppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "aappppppppppppppaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-};
-#endif
 
-int playSound(char *filename)    /* Play soundscape */
+void sleep(float delay)
 {
-    char command[256] = "";
-    int status;
-#ifdef WIN32  /* MS Windows */
-    sprintf(command, "powershell -c (New-Object Media.SoundPlayer \"%s\").PlaySync()", filename);
 
-#else  /* Linux */
-    sprintf(command, "aplay -i -D plughw:2 %s", filename);
+    time_t timer0,timer1;
 
-#endif
-    status = system(command);
-    return status;
+    time(&timer0);
+    do
+    {
+
+        time(&timer1);
+    }
+    while( (timer1-timer0) < delay);
+
 }
 
-pthread_cond_t cond;
-pthread_mutex_t lock;
-int buffer = 0;
-FILE *fp;
+FILE *fp, *ola;
 unsigned long ir=0L, ia=9301L, ic=49297L, im=233280L;
 
 void wi(unsigned int i)
@@ -217,6 +85,7 @@ void wi(unsigned int i)
     b1=(i-b0)/256;
     putc(b0,fp);
     putc(b1,fp);
+
 }
 
 void wl(long l)
@@ -227,6 +96,8 @@ void wl(long l)
     wi(i0);
     wi(i1);
 }
+
+
 double rnd(void)
 {
     ir = (ir*ia+ic) % im;
@@ -234,9 +105,10 @@ double rnd(void)
 }
 
 
-void * Produtor (void* vvvvvv){
+void Produtor1 ()
+{
 
-/* OpenCV variables */
+    /* OpenCV variables */
     VideoCapture cap;
     Mat gray, frame;
 
@@ -266,29 +138,35 @@ void * Produtor (void* vvvvvv){
     int cam_id = 0;  /* First available OpenCV camera */
     /* Optionally override ID from command line parameter: prog.exe cam_id */
 
-
     cap.open(cam_id);
     if (!cap.isOpened())
     {
+        // printf("resenha");
         fprintf(stderr,"Could not open camera %d\n", cam_id);
         exit(1);
     }
-
     printf("abriu camera\n");
     /* Setting standard capture size, may fail; resize later */
 
     cap.read(frame);  /* Dummy read needed with some devices */
-    cap.set(CV_CAP_PROP_FRAME_WIDTH , 176);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 144);
+    //cap.set(CV_CAP_PROP_FRAME_WIDTH , 176);
+    //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 144);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH , 128);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 128);
 
     if (VIEW)    /* Screen views only for debugging */
     {
         namedWindow("Large", CV_WINDOW_AUTOSIZE);
         namedWindow("Small", CV_WINDOW_AUTOSIZE);
     }
-
+    int count = 0;
+    bool bSuccess;
     while (key != 27)    /* Escape key */
     {
+        bSuccess=true;
+       for (int i=0; i<5 && bSuccess; i++)
+			bSuccess = cap.read(frame);
+
         cap.read(frame);
 
         if (frame.empty())
@@ -298,7 +176,6 @@ void * Produtor (void* vvvvvv){
             key = waitKey((int)(100));
             continue;
         }
-
         printf("capturou frame\n");
 
         Mat tmp;
@@ -334,32 +211,33 @@ void * Produtor (void* vvvvvv){
             }
         }
 
-        sem_wait(&pos_vazia);
+
+
         /* Write 8/16-bit mono/stereo .wav file */
         fp = fopen(FNAME,"wb");
-        fprintf(fp,"RIFF");
-        wl(ns*HIST+36L);
-        fprintf(fp,"WAVEfmt ");
-        wl(16L);
-        wi(1);
-        wi(STEREO?2:1);
-        wl(0L+FS);
-        wl(0L+FS*HIST);
-        wi(HIST);
-        wi(HIFI?16:8);
-        fprintf(fp,"data");
-        wl(ns*HIST);
+        fprintf(fp,"RIFF");         //chunkID
+        wl(ns*HIST+36L);            //chunkSize
+        fprintf(fp,"WAVEfmt ");     //format + subChunk1ID
+        wl(16L);                    //subChunk1Size
+        wi(1);                      //audioFormat  1 = PCM
+        wi(STEREO?2:1);             //numChannels
+        wl(0L+FS);                  //sampleRate
+        wl(0L+FS*HIST);             //byteRate
+        wi(HIST);                   //blockAlign
+        wi(HIFI?16:8);              //bitsPerSample
+        fprintf(fp,"data");         //subChunk2ID
+        wl(ns*HIST);                //subChunk2Size
 
-        printf("arquivo setado\n");
+        //printf("arquivo setado\n");
 
         tau1 = 0.5 / w[M-1];
         tau2 = 0.25 * tau1*tau1;
 
         y = yl = yr = z = zl = zr = 0.0;
+
         /* Not optimized for speed */
         while (k < ns && !STEREO)
         {
-
             j = k / m;
             if (j>N-1)
                 j=N-1;
@@ -388,23 +266,22 @@ void * Produtor (void* vvvvvv){
             if (l >= sso-1+ssm) l = sso-1+ssm;
             if (l < sso-ssm) l = sso-ssm;
             ss = (unsigned int) l;
+
             if (HIFI)
                 wi(ss);
             else
                 putc(ss,fp);
 
+
             k++;
         }
 
-        if(buffer == 0){
-            fclose(fp);
-            buffer = 1;
-            printf("fechou o arquivo\n");
-            sem_post(&pos_vazia);
 
+        fclose(fp);
 
-        }
-        /* remove("hificode.wav"); */
+        printf("a\n");
+        PlaySound(TEXT("hificode.wav"), NULL, SND_ASYNC );  /* Play the soundscape */
+        printf("b\n");
 
         k=0;  /* Reset sample count */
     }
@@ -412,40 +289,11 @@ void * Produtor (void* vvvvvv){
 
 }
 
-void * Consumidor(void* v){
-
-    while(true){
-
-        if(buffer == 1){
-
-           sem_wait(&pos_vazia);
-           buffer = 0;
-           printf("**som vai tocar\n");
-           playSound("hificode.wav");  /* Play the soundscape */
-           printf("**acabou de tocar\n");
-           sem_post(&pos_vazia);
-
-        }
-
-    }
-
-}
 
 int main(int argc, char *argv[])
 {
-    sem_init(&pos_vazia, 0, 1);
 
-    //Criando threads
-    pthread_t thread_consumidor, thread_produtor;
-    int i = 1;
-
-    pthread_create(&thread_produtor,NULL, Produtor, NULL);
-    pthread_create(&thread_consumidor,NULL, Consumidor, NULL);
-
-
-    pthread_join(thread_consumidor,NULL);
-    pthread_join(thread_produtor,NULL);
-
+    Produtor1();
 
 
     return(0);
