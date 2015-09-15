@@ -35,3 +35,21 @@
 	"opencv2/core/utility.hpp"
 	<stdio.h>
 
+1440876768 source:c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\main.cpp
+	<cstdlib>
+	<iostream>
+	<signal.h>
+	<sstream>
+	"opencv/highgui.h"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+	"stereoFunction.hpp"
+
+1440786382 c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\stereofunction.hpp
+	"opencv2/calib3d/calib3d.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+	"opencv2/imgcodecs/imgcodecs.hpp"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/core/utility.hpp"
+	<stdio.h>
+

@@ -34,3 +34,19 @@
 	<fstream>
 	<iostream>
 
+1440877195 source:c:\users\jatoba\desktop\projeto jatoba\desafio-intel\testvoiceopcv\main.cpp
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+	<pthread.h>
+	<semaphore.h>
+	"opencv/highgui.h"
+	"opencv2/highgui/highgui.hpp"
+	"opencv2/imgproc/imgproc.hpp"
+	"opencv2/videoio.hpp"
+	<windows.h>
+	<mmsystem.h>
+	<time.h>
+	<fstream>
+	<iostream>
+

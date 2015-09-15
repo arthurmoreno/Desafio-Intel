@@ -12,6 +12,7 @@
 #include "opencv/highgui.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/videoio.hpp"
 #include <windows.h>
 #include <mmsystem.h>
 #include <time.h>

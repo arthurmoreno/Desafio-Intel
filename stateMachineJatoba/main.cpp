@@ -73,7 +73,6 @@ void emiteAlertaDesligar()
 
 }
 
-
 #define OPENCV_BUFFER_SIZE 5
 Mat takePicture(VideoCapture *cap)
 {
@@ -137,27 +136,6 @@ VideoCapture openCamera(int n)
     return cap;
 }
 
-int funcao()
-{
-
-    VideoCapture cap; // open the video camera no. 0
-
-    cap = openCamera(0);
-
-    namedWindow("MyVideo",CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
-
-    Mat frame;
-
-    frame = takePicture(&cap);
-
-    imshow("MyVideo", frame); //show the frame in "MyVideo" window
-
-    waitKey(0);                                          // Wait for a keystroke in the window
-
-
-}
-
-
 void stereoControl(){
 
 
@@ -200,7 +178,6 @@ int main()
         if(botaoLigarIsPressed())
         {
             estadoAtual = DESLIGANDO;
-
         }
 
         switch(estadoAtual)
@@ -268,7 +245,6 @@ int main()
         wait();
         //break;
     }
-
 
     return 0;
 }
