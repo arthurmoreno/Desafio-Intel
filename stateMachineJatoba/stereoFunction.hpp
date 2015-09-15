@@ -61,8 +61,8 @@ Mat doStereo()
     Ptr<StereoBM> bm = StereoBM::create(16,9);
     Ptr<StereoSGBM> sgbm = StereoSGBM::create(0,16,3);
 
-    img1_filename = "scene_l.bmp";
-    img2_filename = "scene_r.bmp";
+    img1_filename = "handleft.jpg"; //"scene_l.bmp";
+    img2_filename = "handrigth.jpg"; //"scene_r.bmp";
 
 
     if( !img1_filename || !img2_filename )

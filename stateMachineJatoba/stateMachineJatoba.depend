@@ -35,7 +35,7 @@
 	"opencv2/core/utility.hpp"
 	<stdio.h>
 
-1440876768 source:c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\main.cpp
+1441814790 source:c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\main.cpp
 	<cstdlib>
 	<iostream>
 	<signal.h>
@@ -45,7 +45,7 @@
 	"opencv2/imgproc/imgproc.hpp"
 	"stereoFunction.hpp"
 
-1440786382 c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\stereofunction.hpp
+1442338624 c:\users\jatoba\desktop\projeto jatoba\desafio-intel\statemachinejatoba\stereofunction.hpp
 	"opencv2/calib3d/calib3d.hpp"
 	"opencv2/imgproc/imgproc.hpp"
 	"opencv2/imgcodecs/imgcodecs.hpp"
